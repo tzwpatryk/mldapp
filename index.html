@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ML Model DApp</title>
+</head>
+<body>
+    <h1>ML Model DApp</h1>
+    <input type="file" id="imageInput">
+    <button onclick="uploadAndPredict()">Upload and Predict</button>
+    <p id="predictionResult"></p>
+
+    <script>
+        async function uploadAndPredict() {
+            const fileInput = document.getElementById('imageInput');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                document.getElementById('predictionResult').innerText = 'No file selected';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('http://localhost:5050/predict', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                const classId = result.class_id;
+                document.getElementById('predictionResult').innerText = 'Prediction: ' + classId;
+            } catch (error) {
+                document.getElementById('predictionResult').innerText = 'Error: ' + error.message;
+                console.error('Error during prediction:', error);
+            }
+        }
+    </script>
+</body>
+</html>
