@@ -15,14 +15,21 @@ contract_source_code = '''
 pragma solidity ^0.8.0;
 
 contract ModelStorage {
-    string private modelHash;
+    mapping(uint256 => string) private modelHashes;
+    uint256 public modelCount;
 
     function setModelHash(string memory _hash) public {
-        modelHash = _hash;
+        modelHashes[modelCount] = _hash;
+        modelCount++;
     }
 
-    function getModelHash() public view returns (string memory) {
-        return modelHash;
+    function getModelHash(uint256 index) public view returns (string memory) {
+        require(index < modelCount, "Model does not exist");
+        return modelHashes[index];
+    }
+
+    function getModelCount() public view returns (uint256) {
+        return modelCount;
     }
 }
 '''

@@ -21,6 +21,7 @@ try:
         model.load_state_dict(torch.load(model_buffer, map_location="mps"))
         model.eval()
         print("Model loaded successfully.")
+        print(model)
     else:
         print(f"Failed to fetch model from IPFS: {response.status}")
     conn.close()
