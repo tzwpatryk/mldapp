@@ -8,21 +8,50 @@
 
     <!-- Upload model section -->
     <h2>Upload Model</h2>
-    <input type="file" id="modelInput">
+    <input type="file" id="modelInput"><br>
+    <label for="numClasses">Number of Classes:</label>
+    <input type="number" id="numClasses" min="1" onchange="generateClassInputs()"><br>
+    <div id="classInputs"></div>
     <button onclick="uploadModel()">Upload Model</button>
     <p id="uploadResult"></p>
 
     <!-- Prediction section -->
     <h2>Predict Bird Species</h2>
+    <label for="baseModelSelect">Choose Base Model:</label>
+    <select id="baseModelSelect">
+        <option value="mobilenetv2">MobileNetV2</option>
+        <option value="resnet18">ResNet18</option>
+    </select>
     <select id="modelSelect"></select>
     <input type="file" id="imageInput">
     <button onclick="uploadAndPredict()">Upload and Predict</button>
     <p id="predictionResult"></p>
 
     <script>
+        function generateClassInputs() {
+            const numClasses = document.getElementById('numClasses').value;
+            const classInputs = document.getElementById('classInputs');
+            classInputs.innerHTML = '';
+
+            for (let i = 0; i < numClasses; i++) {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.placeholder = `Class ${i} Name`;
+                input.id = `class${i}`;
+                classInputs.appendChild(input);
+                classInputs.appendChild(document.createElement('br'));
+            }
+        }
+
         async function uploadModel() {
             const modelInput = document.getElementById('modelInput');
             const file = modelInput.files[0];
+            const numClasses = document.getElementById('numClasses').value;
+            const classNames = {};
+
+            for (let i = 0; i < numClasses; i++) {
+                classNames[i] = document.getElementById(`class${i}`).value;
+            }
 
             if (!file) {
                 document.getElementById('uploadResult').innerText = 'No file selected';
@@ -31,6 +60,8 @@
 
             const formData = new FormData();
             formData.append('model', file);
+            formData.append('num_classes', numClasses);
+            formData.append('class_names', JSON.stringify(classNames));
 
             try {
                 const response = await fetch('http://localhost:5050/upload_model', {
@@ -73,6 +104,7 @@
             const fileInput = document.getElementById('imageInput');
             const file = fileInput.files[0];
             const modelId = document.getElementById('modelSelect').value;
+            const baseModel = document.getElementById('baseModelSelect').value;
 
             if (!file) {
                 document.getElementById('predictionResult').innerText = 'No file selected';
@@ -82,6 +114,7 @@
             const formData = new FormData();
             formData.append('file', file);
             formData.append('model_id', modelId);
+            formData.append('base_model', baseModel);
 
             try {
                 const response = await fetch('http://localhost:5050/predict', {
