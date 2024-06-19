@@ -20,10 +20,9 @@ CORS(app)
 w3 = Web3(Web3.HTTPProvider('http://127.0.0.1:7545'))
 w3.eth.default_account = w3.eth.accounts[0]
 
-# Install Solidity compiler
 install_solc('0.8.0')
 
-# Solidity contract source code
+# Kod źródłowy kontraktu w solidity
 contract_source_code = '''
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
@@ -55,26 +54,30 @@ contract ModelStorage {
 }
 '''
 
-# Compile the contract
+# Kompilacja kontraktu
 compiled_sol = compile_source(contract_source_code, solc_version='0.8.0')
 contract_interface = compiled_sol['<stdin>:ModelStorage']
 
-# Deploy the contract
+# Zdeployowanie kontraktu
 ModelStorage = w3.eth.contract(abi=contract_interface['abi'], bytecode=contract_interface['bin'])
+
+# Inicjalizacja transakcji
 tx_hash = ModelStorage.constructor().transact()
+
+# Czeka aż transakcja zostanie zakończona i zwraca receipt, który zawiera adres kontraktu
 tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
 
-# Get the contract address
+# Adres kontraktu
 contract_address = tx_receipt.contractAddress
 
-# Save ABI and contract address to files
+# Zapis ABI i adresu kontraktu
 with open('ModelStorage_abi.json', 'w') as abi_file:
     json.dump(contract_interface['abi'], abi_file)
 
 with open('ModelStorage_address.txt', 'w') as address_file:
     address_file.write(contract_address)
 
-# Create contract instance
+# Stworzenie instancji kontraktu
 model_storage = w3.eth.contract(address=contract_address, abi=contract_interface['abi'])
 
 def load_model_from_ipfs(ipfs_hash, base_model, n_classes):
@@ -122,12 +125,12 @@ def upload_model():
     num_classes = int(request.form['num_classes'])
     class_names = json.loads(request.form['class_names'])
 
-    # Upload model to IPFS
+    # Wrzucenie modelu na IPFS
     response = requests.post('http://127.0.0.1:5001/api/v0/add', files={'file': model_file})
     if response.status_code == 200:
         ipfs_hash = response.json()['Hash']
         
-        # Save model hash and classes to the smart contract
+        # Zapis hashu z modelu i jego klas na smart kontrakcie
         model_storage.functions.setModelHash(ipfs_hash, json.dumps(class_names)).transact()
         
         return jsonify({'ipfs_hash': ipfs_hash}), 200

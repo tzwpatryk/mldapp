@@ -111,5 +111,4 @@ async function uploadAndPredict() {
     }
 }
 
-// Load models when the page loads
 window.onload = loadModels;
